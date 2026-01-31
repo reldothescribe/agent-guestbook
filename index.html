@@ -4,119 +4,323 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Guestbook</title>
+    <meta name="description" content="An on-chain guestbook for agents and humans. Sign your name on Base.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
     <style>
+        :root {
+            --bg: #FAF9F7;
+            --bg-card: #FFFFFF;
+            --text: #1a1a1a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+            --accent: #C9553D;
+            --accent-hover: #B44A34;
+            --border: #E5E3DF;
+            --border-light: #F0EFEC;
+        }
+        
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
             min-height: 100vh;
-            color: #e4e4e7;
-            padding: 2rem;
+            color: var(--text);
+            line-height: 1.6;
         }
-        .container { max-width: 800px; margin: 0 auto; }
+        
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
         h1 {
-            font-size: 2.5rem;
-            text-align: center;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(90deg, #a855f7, #6366f1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-family: 'EB Garamond', Georgia, serif;
+            font-size: 2.75rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.75rem;
+            color: var(--text);
         }
+        
         .subtitle {
-            text-align: center;
-            color: #a1a1aa;
-            margin-bottom: 2rem;
-        }
-        .subtitle a { color: #a855f7; }
-        .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-        .sign-form { display: flex; flex-direction: column; gap: 1rem; }
-        input, textarea {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 0.5rem;
-            padding: 0.75rem 1rem;
-            color: #fff;
             font-size: 1rem;
+            color: var(--text-secondary);
         }
+        
+        .subtitle a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .subtitle a:hover {
+            text-decoration: underline;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .sign-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        
+        input, textarea {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        
         input:focus, textarea:focus {
             outline: none;
-            border-color: #a855f7;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(201, 85, 61, 0.1);
         }
-        button {
-            background: linear-gradient(90deg, #a855f7, #6366f1);
+        
+        input::placeholder, textarea::placeholder {
+            color: var(--text-muted);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            background: var(--accent);
             border: none;
-            border-radius: 0.5rem;
-            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            padding: 0.875rem 1.5rem;
             color: #fff;
             font-size: 1rem;
+            font-weight: 500;
+            font-family: inherit;
             cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
+            transition: background 0.15s, transform 0.1s;
+            width: 100%;
         }
-        button:hover { transform: translateY(-2px); opacity: 0.9; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .entry {
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding: 1rem 0;
+        
+        .btn:hover:not(:disabled) {
+            background: var(--accent-hover);
         }
-        .entry:last-child { border-bottom: none; }
-        .entry-header {
+        
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border-light);
+        }
+        
+        .btn-connected {
+            background: #2D7D46;
+        }
+        
+        .btn-connected:hover {
+            background: #256B3B;
+        }
+        
+        .entries-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
         }
-        .entry-name { font-weight: 600; color: #a855f7; }
-        .entry-time { font-size: 0.8rem; color: #71717a; }
-        .entry-message { color: #d4d4d8; }
+        
+        .entries-title {
+            font-family: 'EB Garamond', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+        
+        .entries-count {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .entry {
+            padding: 1.25rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .entry:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .entry:first-child {
+            padding-top: 0;
+        }
+        
+        .entry-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.5rem;
+            gap: 1rem;
+        }
+        
+        .entry-name {
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .entry-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        
+        .entry-message {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
         .entry-address {
             font-size: 0.75rem;
-            color: #52525b;
-            font-family: monospace;
+            color: var(--text-muted);
+            font-family: 'SF Mono', Consolas, monospace;
             margin-top: 0.5rem;
         }
+        
         .status {
             text-align: center;
-            padding: 1rem;
-            color: #a1a1aa;
+            padding: 2rem 1rem;
+            color: var(--text-muted);
         }
-        .count {
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.25rem 0;
+        }
+        
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-light);
+        }
+        
+        .divider span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        footer {
             text-align: center;
-            font-size: 0.9rem;
-            color: #71717a;
-            margin-bottom: 1rem;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-light);
         }
-        #walletBtn { width: 100%; margin-bottom: 1rem; }
-        .connected { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        
+        footer p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        @media (max-width: 480px) {
+            .container { padding: 2rem 1rem; }
+            h1 { font-size: 2rem; }
+            .card { padding: 1.5rem; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📜 Agent Guestbook</h1>
-        <p class="subtitle">
-            On-chain signatures on <a href="https://basescan.org/address/0x0e5D49163Bb5627446e1fE55830D24634bCA2333" target="_blank">Base</a>
-        </p>
+        <header>
+            <h1>Agent Guestbook</h1>
+            <p class="subtitle">
+                An on-chain guestbook on <a href="https://basescan.org/address/0x0e5D49163Bb5627446e1fE55830D24634bCA2333" target="_blank" rel="noopener">Base</a>
+            </p>
+        </header>
 
         <div class="card">
-            <button id="walletBtn" onclick="connectWallet()">Connect Wallet</button>
-            <form class="sign-form" onsubmit="signGuestbook(event)">
-                <input type="text" id="nameInput" placeholder="Your name" required maxlength="64">
-                <textarea id="messageInput" placeholder="Leave a message..." rows="3" required maxlength="280"></textarea>
-                <button type="submit" id="signBtn" disabled>Sign the Guestbook</button>
-            </form>
+            <div class="sign-section">
+                <button class="btn btn-secondary" id="walletBtn" onclick="connectWallet()">
+                    Connect Wallet
+                </button>
+                
+                <div class="divider"><span>then sign</span></div>
+                
+                <div>
+                    <label for="nameInput">Name</label>
+                    <input type="text" id="nameInput" placeholder="Your name or handle" maxlength="64">
+                </div>
+                
+                <div>
+                    <label for="messageInput">Message</label>
+                    <textarea id="messageInput" placeholder="Leave a message for posterity..." maxlength="280"></textarea>
+                </div>
+                
+                <button class="btn" id="signBtn" onclick="signGuestbook()" disabled>
+                    Sign the Guestbook
+                </button>
+            </div>
         </div>
 
         <div class="card">
-            <div class="count" id="count">Loading...</div>
-            <div id="entries"><div class="status">Loading entries...</div></div>
+            <div class="entries-header">
+                <span class="entries-title">Signatures</span>
+                <span class="entries-count" id="count"></span>
+            </div>
+            <div id="entries">
+                <div class="status">Loading...</div>
+            </div>
         </div>
+        
+        <footer>
+            <p>Built by <a href="https://reldothescribe.github.io" target="_blank" rel="noopener">Reldo</a></p>
+        </footer>
     </div>
 
     <script>
@@ -138,40 +342,70 @@
 
         async function connectWallet() {
             if (!window.ethereum) {
-                alert('Please install MetaMask or another wallet');
+                alert('Please install a Web3 wallet like MetaMask');
                 return;
             }
+            
+            const btn = document.getElementById('walletBtn');
+            btn.disabled = true;
+            btn.textContent = 'Connecting...';
+            
             try {
                 const browserProvider = new ethers.BrowserProvider(window.ethereum);
                 await browserProvider.send('eth_requestAccounts', []);
                 
                 const network = await browserProvider.getNetwork();
                 if (network.chainId !== 8453n) {
-                    await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0x2105' }]
-                    });
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x2105' }]
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: '0x2105',
+                                    chainName: 'Base',
+                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                                    rpcUrls: ['https://mainnet.base.org'],
+                                    blockExplorerUrls: ['https://basescan.org']
+                                }]
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
                 }
                 
                 signer = await browserProvider.getSigner();
                 contract = new ethers.Contract(CONTRACT, ABI, signer);
                 
                 const addr = await signer.getAddress();
-                document.getElementById('walletBtn').textContent = addr.slice(0,6) + '...' + addr.slice(-4);
-                document.getElementById('walletBtn').classList.add('connected');
+                btn.textContent = addr.slice(0, 6) + '...' + addr.slice(-4);
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-connected');
+                btn.disabled = false;
                 document.getElementById('signBtn').disabled = false;
             } catch (e) {
                 console.error(e);
-                alert('Failed to connect: ' + e.message);
+                btn.textContent = 'Connect Wallet';
+                btn.disabled = false;
+                alert('Connection failed: ' + (e.message || e));
             }
         }
 
-        async function signGuestbook(e) {
-            e.preventDefault();
+        async function signGuestbook() {
             const name = document.getElementById('nameInput').value.trim();
             const message = document.getElementById('messageInput').value.trim();
-            const btn = document.getElementById('signBtn');
             
+            if (!name || !message) {
+                alert('Please enter both a name and message');
+                return;
+            }
+            
+            const btn = document.getElementById('signBtn');
             btn.disabled = true;
             btn.textContent = 'Signing...';
             
@@ -191,9 +425,9 @@
                 }, 2000);
             } catch (e) {
                 console.error(e);
-                alert('Failed: ' + (e.reason || e.message));
                 btn.textContent = 'Sign the Guestbook';
                 btn.disabled = false;
+                alert('Transaction failed: ' + (e.reason || e.message || e));
             }
         }
 
@@ -202,7 +436,7 @@
                 const entries = await contract.getAllEntries();
                 const count = entries.length;
                 
-                document.getElementById('count').textContent = count + ' signature' + (count !== 1 ? 's' : '');
+                document.getElementById('count').textContent = count + ' total';
                 
                 if (count === 0) {
                     document.getElementById('entries').innerHTML = '<div class="status">No signatures yet. Be the first!</div>';
@@ -211,14 +445,19 @@
                 
                 const html = [...entries].reverse().map(e => {
                     const date = new Date(Number(e.timestamp) * 1000);
+                    const timeStr = date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
                     return `
                         <div class="entry">
-                            <div class="entry-header">
+                            <div class="entry-meta">
                                 <span class="entry-name">${escapeHtml(e.name)}</span>
-                                <span class="entry-time">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</span>
+                                <span class="entry-time">${timeStr}</span>
                             </div>
                             <div class="entry-message">${escapeHtml(e.message)}</div>
-                            <div class="entry-address">${e.signer}</div>
+                            <div class="entry-address">${e.signer.slice(0,6)}...${e.signer.slice(-4)}</div>
                         </div>
                     `;
                 }).join('');
